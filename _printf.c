@@ -2,6 +2,7 @@
 #include <stdarg.h>
 #include <unistd.h>
 
+void flush_buffer(char printf_output_array[], int *printf_index);
 /**
  * _printf - custom creation and implimentation of stdlib printf
  * @format: The format string.
@@ -11,75 +12,59 @@
 
 int _printf(const char *format, ...)
 
-/**
- * write_char - Writes a single character to the standard output.
- * @ch: The character to be written.
- *
- * Return: The number of characters written (1).
- */
-
-int write_char(char ch)
 {
-	write(1, &ch, 1);
-	return (1);
-}
-
-/**
- * write_str - Writes a string of characters to standard output.
- * @str: The string to be written.
- *
- * Return: The number of characters written (excluding the null byte).
- * If the input string is NULL, "(null)" is written instead.
- */
-int write_str(const char *str)
-{
-	if (str == NULL)
-	{
-		return (write_str("(null)"));
-	}
-	int len = 0;
-	while (*str)
-	{
-		write(1, str, 1);
-		str++;
-		len++
-	}
-	return (len);
-
-{
-	int character_print = 0;
-	va_list all_args_list;
+	int a, printed = 0, chars_to_print = 0;
+	int flags, width, precision, size, printf_index = 0;
+	va_list list;
+	char printf_output_array[BUFF_SIZE];
 
 	if (format == NULL)
-	{
-		return (-1); /*handles NULL format string*/
-	}
-	va_start(all_args_list, format);
+		return (-1);
 
-	while (*format)
+	va_start(list, format);
+
+	for (a = 0; format && format[a] != '\0'; a++)
 	{
-		if (*format != '%')
+		if (format[a] != '%')
 		{
-			character_print += write_char(*format);
+			printf_output_array[printf_index++] = format[a];
+			if (printf_index == BUFF_SIZE)
+				flush_buffer(printf_output_array, &printf_index);
+			chars_to_print++;
 		}
+
 		else
 		{
-			format++;
-			switch (*format)
-			{
-				case 'c':
-					character_print += write_char(va_arg(all_args_list, int));
-					break;
-				case 's':
-					character_print += write_str(va_arg(all_args_list, char *));
-					break;
-				case '%':
-				character_print += write_char('%');
-			}
-			format++;
+			flush_buffer(printf_output_array, &printf_index);
+			flags = get_flags(format, &a);
+			width = get_width(format, &a, list);
+			precision = get_precision(format, &a, list);
+			size = get_size(format, &a);
+			++a;
+			printed = handle_specifier(format, &a, list, printf_output_array, flags, width, precision, size);
+			if (printed == -1)
+				return (-1);
+			chars_to_print += printed;
 		}
+	}
 
-	va_end(all_args_list);
-	return (character_print);
+	flush_buffer(printf_output_array, &printf_index;
+
+	va_end(list);
+
+	return (chars_to_print);
 }
 
+/**
+ * flush_buffer - Prints buffer contents
+ * @printf_output: Array of chars
+ * @printf_index: Index representing length and point to add next char.
+ */
+
+void flush_buffer(char printf_output[], int *printf_index)
+{
+	if (*printf_index > 0)
+	write(1, &printf_output[0], *printf_index);
+
+	*printf_index = 0;
+}
